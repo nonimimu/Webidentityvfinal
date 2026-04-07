@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NONIOAEY - Skin Builder Pro (God's Eye View)</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Mitr', 'sans-serif'] },
+                    colors: { theme: { bg: '#020617', primary: '#1E3A8A', secondary: '#0F172A', text: '#F8FAFC' } },
+                    boxShadow: { 'soft': '0 10px 25px -5px rgba(30, 58, 138, 0.5)', 'card': '0 4px 20px -2px rgba(0, 0, 0, 0.8)' }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #020617; color: #F8FAFC; overflow-x: hidden; touch-action: manipulation; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #1E3A8A; border-radius: 10px; }
+        ::-webkit-scrollbar-track { background: #0F172A; }
+        
+        /* 🚨 แก้ไขกรอบให้เลื่อนขึ้นลงได้ด้วย ถ้าสกินเยอะจัดๆ */
+        .stage-wrapper { width: 100%; max-height: 75vh; overflow-x: auto; overflow-y: auto; padding: 40px 20px; }
+        #stage { position: relative; }
+        #collage { display: flex; flex-wrap: wrap; width: var(--cw, 800px); min-width: var(--cw, 800px); position: absolute; top: 0; left: 0; }
+        
+        .item { 
+            position: relative; 
+            width: var(--w, 150px); 
+            height: calc(var(--w) * 1.5); 
+            margin-right: var(--mx, 0px); 
+            margin-bottom: var(--my, 0px); 
+            cursor: grab; 
+            display: flex; 
+            align-items: flex-end; 
+            justify-content: center; 
+        }
+        
+        .item img { 
+            height: 100%; 
+            width: auto; 
+            max-width: 150%; 
+            object-fit: contain; 
+            object-position: bottom center; 
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6)); 
+            pointer-events: none; 
+            transform: scale(calc(var(--zoom, 1.2) * var(--ls, 1)));
+            transform-origin: bottom center;
+            transition: transform 0.1s ease-out;
+        }
+        
+        .del { position: absolute; top: -5px; right: -5px; background: #EF4444; color: white; width: 24px; height: 24px; border-radius: 50%; display: none; align-items: center; justify-content: center; z-index: 9999; border: 2px solid #020617; font-size: 12px; font-weight: bold; cursor: pointer; }
+        .controls { position: absolute; top: -5px; left: -5px; display: none; flex-direction: column; gap: 4px; z-index: 9999; }
+        .ctrl-btn { background: #3B82F6; color: white; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 2px solid #020617; font-weight: bold; cursor: pointer; }
+        .ctrl-btn:active { transform: scale(0.9); }
+        
+        .show-controls .del, .show-controls .controls { display: flex !important; }
+        .item:hover .del, .item:hover .controls, .item:active .del, .item:active .controls { display: flex; }
+        
+        .glass-modal { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px); border: 1px solid #1E3A8A; }
+        .skin-selected { border-color: #FFB6C1 !important; transform: scale(0.95); opacity: 0.8; }
+        .skin-selected .check-icon { display: flex !important; }
+        
+        #load { position: fixed; inset: 0; background: rgba(2, 6, 23, 0.98); backdrop-filter: blur(10px); z-index: 50000; display: none; flex-direction: column; justify-content: center; align-items: center; }
+        
+        .char-btn.active { background-color: #1E3A8A; color: white; border-color: #1E3A8A; transform: scale(1.05); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="antialiased selection:bg-theme-primary relative">
+
+    <div class="max-w-4xl mx-auto min-h-screen bg-theme-bg sm:shadow-soft relative flex flex-col border-x border-theme-secondary container-main">
+        
+        <header class="bg-gradient-to-br from-theme-secondary to-theme-bg pt-10 pb-8 px-6 text-center border-b border-theme-primary/30">
+            <div class="inline-flex items-center gap-2 bg-theme-primary/20 px-6 py-2 rounded-full border border-theme-primary shadow-soft">
+                <i data-lucide="sparkles" class="w-4 h-4 text-blue-400"></i>
+                <h1 class="text-2xl font-bold tracking-[0.2em] text-white uppercase">NONIOAEY</h1>
+                <i data-lucide="sparkles" class="w-4 h-4 text-blue-400"></i>
+            </div>
+            <p class="mt-2 text-xs text-slate-400">God's Eye View Edition 👁️✨</p>
+        </header>
+
+        <main class="flex-1 px-4 py-6 space-y-6">
+            <section class="bg-theme-secondary rounded-[30px] p-5 shadow-card border border-theme-primary/20">
+                <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-6 text-center">
+                    <div><label class="text-[9px] font-bold text-slate-400">สกิน/แถว</label><input type="number" id="cols" value="13" oninput="refresh()" class="w-full bg-theme-bg border border-slate-700 text-white rounded-xl py-2 text-center text-sm font-bold outline-none focus:border-blue-500"></div>
+                    <div><label class="text-[9px] font-bold text-slate-400">ขนาดความกว้าง</label><input type="number" id="w" value="150" oninput="refresh()" class="w-full bg-theme-bg border border-slate-700 text-white rounded-xl py-2 text-center text-sm font-bold outline-none focus:border-blue-500"></div>
+                    <div><label class="text-[9px] font-bold text-slate-400">ซ้อน (X)</label><input type="number" id="mx" value="-30" oninput="refresh()" class="w-full bg-theme-bg border border-slate-700 text-white rounded-xl py-2 text-center text-sm font-bold outline-none focus:border-blue-500"></div>
+                    <div><label class="text-[9px] font-bold text-slate-400">ซ้อน (Y)</label><input type="number" id="my" value="-40" oninput="refresh()" class="w-full bg-theme-bg border border-slate-700 text-white rounded-xl py-2 text-center text-sm font-bold outline-none focus:border-blue-500"></div>
+                    <div><label class="text-[9px] font-bold text-pink-400">ซูมตัวละคร</label><input type="number" id="zoom" value="1.2" step="0.1" oninput="refresh()" class="w-full bg-theme-primary/20 border border-theme-primary text-white rounded-xl py-2 text-center text-sm font-bold outline-none focus:border-pink-500"></div>
+                    <div><label class="text-[9px] font-bold text-emerald-400">ย่อกระดาน (%)</label><input type="number" id="boardZoom" value="100" step="10" oninput="refresh()" class="w-full bg-emerald-500/20 border border-emerald-500 text-white rounded-xl py-2 text-center text-sm font-bold outline-none focus:border-emerald-400"></div>
+                </div>
+
+                <div class="flex flex-col gap-3">
+                    <button onclick="openLibrary()" class="bg-theme-primary text-white py-4 rounded-2xl font-bold shadow-soft flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors">
+                        <i data-lucide="layout-grid" class="w-5 h-5"></i> เลือกสกินหลายรูปพร้อมกัน
+                    </button>
+                    <div class="flex gap-2">
+                        <button onclick="document.getElementById('file').click()" class="flex-1 bg-transparent text-blue-400 py-3 rounded-xl font-bold border-2 border-dashed border-theme-primary hover:bg-theme-primary/10">อัปโหลดเอง</button>
+                        <button onclick="save()" class="flex-1 bg-white text-theme-bg py-3 rounded-xl font-bold shadow-card hover:bg-slate-200">บันทึกรูปภาพ</button>
+                    </div>
+                    <input type="file" id="file" multiple accept="image/*" class="hidden">
+                </div>
+            </section>
+
+            <section class="bg-theme-secondary/50 rounded-[40px] border border-theme-primary/30 shadow-inner min-h-[500px] relative">
+                
+                <div class="absolute top-4 right-4 z-50 flex flex-col gap-2 items-end">
+                    <button onclick="fitToScreen()" class="bg-emerald-600 text-white px-4 py-2 rounded-full font-bold shadow-lg flex items-center gap-2 text-xs border border-white/20 transition-colors hover:bg-emerald-500">
+                        <i data-lucide="maximize" class="w-4 h-4"></i> ย่อพอดีจอ 👁️
+                    </button>
+                    <button onclick="document.getElementById('collage').classList.toggle('show-controls'); this.classList.toggle('bg-pink-500'); this.classList.toggle('bg-slate-700');" class="bg-slate-700 text-white px-4 py-2 rounded-full font-bold shadow-lg flex items-center gap-2 text-xs border border-white/20 transition-colors">
+                        <i data-lucide="settings-2" class="w-4 h-4"></i> โหมดปรับขนาด/ลบรูป
+                    </button>
+                </div>
+
+                <div class="stage-wrapper custom-scroll">
+                    <div id="stage"><div id="collage"></div></div>
+                </div>
+            </section>
+        </main>
+
+        <div id="libraryModal" class="fixed inset-0 z-[10000] hidden flex items-center justify-center p-2 sm:p-4">
+            <div class="absolute inset-0 bg-black/80 backdrop-blur-md" onclick="closeLibrary()"></div>
+            <div class="glass-modal w-full max-w-3xl h-[90vh] rounded-[30px] sm:rounded-[40px] shadow-2xl relative flex flex-col overflow-hidden">
+                <div class="p-5 flex justify-between items-center border-b border-theme-primary/30 bg-theme-secondary/80">
+                    <h3 class="text-lg sm:text-xl font-bold text-white flex items-center gap-2 italic"><i data-lucide="image" class="text-blue-400"></i> เลือกสกิน</h3>
+                    <button onclick="closeLibrary()" class="w-8 h-8 rounded-full bg-theme-bg shadow-sm flex items-center justify-center font-bold text-slate-400 hover:text-white">✕</button>
+                </div>
+                
+                <div class="px-5 py-3 space-y-3 bg-theme-secondary/50">
+                    <input type="text" id="libSearch" placeholder="พิมพ์ชื่อตัวละครหรือสกิน..." class="w-full p-3 rounded-xl border border-theme-primary bg-theme-bg/80 text-white outline-none focus:border-pink-400 text-sm">
+                    <div id="charFilter" class="flex gap-2 overflow-x-auto pb-2 no-scrollbar"></div>
+                </div>
+                
+                <div id="libGrid" class="flex-1 overflow-y-auto p-4 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 content-start pb-32"></div>
+
+                <div class="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-theme-bg via-theme-bg to-transparent">
+                    <button onclick="confirmSelection()" id="confirmBtn" class="w-full bg-pink-500 text-white py-4 rounded-2xl font-bold shadow-lg flex items-center justify-center gap-2 hover:bg-pink-400 transition-colors opacity-50 pointer-events-none">
+                        เพิ่ม <span id="selectCount">0</span> สกินลงกระดาน
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="load">
+            <div class="relative flex flex-col items-center w-64 max-w-full px-4 text-center">
+                <i data-lucide="cpu" class="w-14 h-14 text-pink-400 mb-4 opacity-90 animate-bounce"></i>
+                <h3 class="text-white font-bold text-xl tracking-widest uppercase mb-4 shadow-black drop-shadow-md">Processing...</h3>
+                
+                <div class="w-full bg-slate-800 rounded-full h-4 mb-3 overflow-hidden border border-slate-700 shadow-inner">
+                    <div id="progressBar" class="bg-gradient-to-r from-blue-500 to-pink-500 h-full rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
+                </div>
+                
+                <p id="progressText" class="text-pink-400 font-bold text-lg mb-1 drop-shadow-sm">0% (0/0)</p>
+                <p class="text-slate-400 text-[10px] leading-relaxed mt-2" id="loadingTip">
+                    กำลังดึงข้อมูลและตัดความว่างเปล่า...<br>
+                    <span class="text-blue-400">รูปไม่แหว่ง 100% รอแป๊บเดียวนะคะพี่ 🌸</span>
+                </p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        lucide.createIcons();
+        const collage = document.getElementById('collage');
+        const load = document.getElementById('load');
+        const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR7BKWYQRWWJSCvoT8gnPcTzU0HGylpQp-tgx7ioueEydu-C8FdLM7nwpKwa_fjAVlpWAGVSHGZuL2X/pub?output=csv';
+        let allSkins = [];
+        let selectedSkins = []; 
+
+        function updateZ() {
+            const items = document.querySelectorAll('.item:not(.sortable-ghost)');
+            let cols = Math.max(1, parseInt(document.getElementById('cols').value) || 13);
+            for (let i = 0; i < items.length; i++) {
+                let row = Math.floor(i / cols);
+                let col = i % cols;             
+                items[i].style.zIndex = (row * 1000) + (cols - col); 
+            }
+        }
+
+        // 🚨 ระบบย่อกระดานอัจฉริยะ 
+        function refresh() {
+            let colsEl = document.getElementById('cols');
+            let wEl = document.getElementById('w');
+            let mxEl = document.getElementById('mx');
+            let myEl = document.getElementById('my');
+            let zoomEl = document.getElementById('zoom');
+            let boardZoomEl = document.getElementById('boardZoom');
+
+            let cols = Math.max(1, parseInt(colsEl.value) || 13);
+            let w = parseFloat(wEl.value) || 150;
+            let mx = parseFloat(mxEl.value) || -30;
+            let my = parseFloat(myEl.value) || -40;
+            let zoom = parseFloat(zoomEl.value) || 1.2;
+            let boardScale = parseFloat(boardZoomEl.value) / 100 || 1; // ดึงค่าเปอเซ็นต์มาย่อ
+            
+            let exactWidth = w + ((cols - 1) * (w + mx)); 
+            collage.style.setProperty('--cw', exactWidth + 'px');
+            collage.style.setProperty('--w', w + 'px');
+            collage.style.setProperty('--mx', mx + 'px');
+            collage.style.setProperty('--my', my + 'px');
+            collage.style.setProperty('--zoom', zoom);
+            
+            let totalItems = document.querySelectorAll('.item:not(.sortable-ghost)').length;
+            
+            if(totalItems > 0) {
+                let rows = Math.ceil(totalItems / cols);
+                let itemHeight = w * 1.5;
+                let exactHeight = itemHeight + ((rows - 1) * (itemHeight + my));
+                
+                // 1. สั่งย่อกระดานตามเปอร์เซ็นต์
+                collage.style.transform = `scale(${boardScale})`;
+                collage.style.transformOrigin = 'top left';
+                
+                // 2. ปรับขนาดกล่องด้านหลังให้เล็กลงตาม (จะได้ไม่มีที่ว่างเหลือๆ)
+                let stage = document.getElementById('stage');
+                stage.style.width = (exactWidth * boardScale) + 'px';
+                stage.style.height = (exactHeight * boardScale) + 'px';
+                
+            } else {
+                collage.style.transform = `scale(1)`;
+                document.getElementById('stage').style.width = 'auto';
+                document.getElementById('stage').style.height = 'auto';
+            }
+            updateZ(); 
+        }
+
+        // 🚨 ปุ่มเวทมนตร์ ย่อพอดีจอ!
+        function fitToScreen() {
+            const wrapperWidth = document.querySelector('.stage-wrapper').clientWidth - 40; // ลบขอบซ้ายขวา
+            let w = parseFloat(document.getElementById('w').value) || 150;
+            let mx = parseFloat(document.getElementById('mx').value) || -30;
+            let cols = Math.max(1, parseInt(document.getElementById('cols').value) || 13);
+            let exactWidth = w + ((cols - 1) * (w + mx)); 
+            
+            // คำนวณเปอร์เซ็นต์ที่ต้องย่อเพื่อให้พอดีเป๊ะ
+            let neededScale = wrapperWidth / exactWidth;
+            if (neededScale > 1) neededScale = 1; // ถ้ากระดานเล็กอยู่แล้วไม่ต้องขยาย
+            
+            document.getElementById('boardZoom').value = Math.round(neededScale * 100);
+            refresh();
+        }
+
+        function scaleItem(btn, amount, event) {
+            event.preventDefault(); 
+            event.stopPropagation(); 
+            const item = btn.closest('.item');
+            let currentScale = parseFloat(item.style.getPropertyValue('--ls')) || 1;
+            currentScale += amount;
+            currentScale = Math.max(0.5, Math.min(3, currentScale)); 
+            item.style.setProperty('--ls', currentScale);
+        }
+
+        async function autoCropImage(originalUrl, fallbackThumb) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.crossOrigin = "Anonymous"; 
+                let isResolved = false;
+                const timer = setTimeout(() => {
+                    if (!isResolved) { isResolved = true; resolve(fallbackThumb); }
+                }, 8000);
+                img.src = 'https://wsrv.nl/?url=' + encodeURIComponent(originalUrl) + '&output=png';
+                img.onload = () => {
+                    if (isResolved) return;
+                    try {
+                        const cvs = document.createElement('canvas'); const ctx = cvs.getContext('2d', {willReadFrequently:true});
+                        cvs.width = img.width; cvs.height = img.height; ctx.drawImage(img, 0, 0);
+                        const data = ctx.getImageData(0,0,cvs.width,cvs.height).data;
+                        let t=cvs.height, b=0, l=cvs.width, r=0, found=false;
+                        for(let y=0; y<cvs.height; y++) for(let x=0; x<cvs.width; x++) 
+                            if(data[(y*cvs.width+x)*4+3] > 5) { t=Math.min(t,y); b=Math.max(b,y); l=Math.min(l,x); r=Math.max(r,x); found=true; }
+                        clearTimeout(timer); isResolved = true;
+                        if(found) {
+                            const cCvs = document.createElement('canvas'); cCvs.width = r-l+1; cCvs.height = b-t+1;
+                            cCvs.getContext('2d').drawImage(img, l, t, cCvs.width, cCvs.height, 0, 0, cCvs.width, cCvs.height);
+                            resolve(cCvs.toDataURL());
+                        } else { resolve(fallbackThumb); }
+                    } catch(e) { clearTimeout(timer); isResolved = true; resolve(fallbackThumb); } 
+                };
+                img.onerror = () => { if (!isResolved) { clearTimeout(timer); isResolved = true; resolve(fallbackThumb); } };
+            });
+        }
+
+        async function openLibrary() {
+            document.getElementById('libraryModal').classList.remove('hidden');
+            selectedSkins = []; updateConfirmButton();
+            if (allSkins.length === 0) {
+                document.getElementById('progressText').innerText = "Loading Library...";
+                document.getElementById('progressBar').style.width = '100%';
+                load.style.display = 'flex';
+                try {
+                    const res = await fetch(csvUrl); const text = await res.text(); const rows = text.split('\n').slice(1);
+                    allSkins = rows.map(r => {
+                        const c = r.split(','); const fileIdMatch = c[2]?.match(/[-\w]{25,}/); const fileId = fileIdMatch ? fileIdMatch[0] : null;
+                        return { char: c[0]?.trim() || 'General', name: c[1]?.trim() || 'Skin', originalUrl: fileId ? `https://drive.google.com/uc?export=view&id=${fileId}` : '', thumbUrl: fileId ? `https://drive.google.com/thumbnail?id=${fileId}&sz=w500` : '' };
+                    }).filter(s => s.originalUrl);
+                    renderFilters(); renderLibrary(allSkins);
+                } catch (e) { alert("Error loading data."); }
+                load.style.display = 'none';
+            } else { renderLibrary(allSkins); }
+        }
+
+        function renderFilters() {
+            const container = document.getElementById('charFilter'); const chars = [...new Set(allSkins.map(s => s.char))];
+            let html = `<button onclick="filterChar('all', this)" class="char-btn active px-4 py-1.5 rounded-full bg-theme-secondary border border-theme-primary text-[10px] font-bold shadow-sm shrink-0">ทั้งหมด</button>`;
+            for (let i = 0; i < chars.length; i++) html += `<button onclick="filterChar('${chars[i]}', this)" class="char-btn px-4 py-1.5 rounded-full bg-theme-bg border border-slate-700 text-[10px] font-bold shadow-sm shrink-0">${chars[i]}</button>`;
+            container.innerHTML = html;
+        }
+
+        function filterChar(name, btn) {
+            document.querySelectorAll('.char-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active');
+            renderLibrary(name === 'all' ? allSkins : allSkins.filter(s => s.char === name));
+        }
+
+        function toggleSkinSelect(originalUrl, thumbUrl, element) {
+            const existingIndex = selectedSkins.findIndex(s => s.url === originalUrl);
+            if (existingIndex > -1) { selectedSkins.splice(existingIndex, 1); element.classList.remove('skin-selected'); } 
+            else { selectedSkins.push({ url: originalUrl, thumb: thumbUrl }); element.classList.add('skin-selected'); }
+            updateConfirmButton();
+        }
+
+        function updateConfirmButton() {
+            const btn = document.getElementById('confirmBtn'); const count = document.getElementById('selectCount');
+            count.innerText = selectedSkins.length;
+            btn.classList.toggle('opacity-50', selectedSkins.length === 0);
+            btn.classList.toggle('pointer-events-none', selectedSkins.length === 0);
+        }
+
+        function renderLibrary(skins) {
+            const grid = document.getElementById('libGrid');
+            let html = '';
+            for (let i = 0; i < skins.length; i++) {
+                let s = skins[i]; const isSelected = selectedSkins.some(selected => selected.url === s.originalUrl);
+                html += `
+                <div onclick="toggleSkinSelect('${s.originalUrl}', '${s.thumbUrl}', this)" class="relative bg-theme-secondary p-1.5 rounded-2xl border-2 border-slate-700 hover:border-blue-400 transition-all cursor-pointer shadow-sm flex flex-col items-center ${isSelected ? 'skin-selected' : ''}">
+                    <div class="check-icon absolute top-2 right-2 bg-pink-500 rounded-full p-1 hidden z-10 shadow-md"><i data-lucide="check" class="w-3 h-3 text-white"></i></div>
+                    <div class="w-full aspect-[3/4] bg-theme-bg/50 rounded-xl overflow-hidden flex items-end justify-center"><img src="${s.thumbUrl}" class="w-full h-full object-contain object-bottom"></div>
+                    <div class="text-center mt-1.5 w-full"><p class="text-[8px] text-slate-400 truncate font-medium">${s.name}</p></div>
+                </div>`;
+            }
+            grid.innerHTML = html; lucide.createIcons();
+        }
+
+        document.getElementById('libSearch').oninput = (e) => {
+            const term = e.target.value.toLowerCase(); renderLibrary(allSkins.filter(s => s.char.toLowerCase().includes(term) || s.name.toLowerCase().includes(term)));
+        };
+
+        function closeLibrary() { document.getElementById('libraryModal').classList.add('hidden'); }
+
+        async function confirmSelection() {
+            closeLibrary(); load.style.display = 'flex';
+            const total = selectedSkins.length;
+            document.getElementById('progressBar').style.width = '0%';
+            document.getElementById('progressText').innerText = `0% (0/${total})`;
+            document.getElementById('loadingTip').innerHTML = "กำลังดึงข้อมูลและตัดความว่างเปล่า...<br><span class='text-blue-400'>รูปไม่แหว่ง 100% รอแป๊บเดียวนะคะพี่ 🌸</span>";
+
+            for (let i = 0; i < total; i++) {
+                const croppedUrl = await autoCropImage(selectedSkins[i].url, selectedSkins[i].thumb);
+                const div = document.createElement('div'); div.className = 'item'; div.style.setProperty('--ls', 1);
+                div.innerHTML = `<button class="del" onclick="this.parentElement.remove(); refresh();">✕</button>
+                    <div class="controls"><button type="button" class="ctrl-btn bg-blue-500 hover:bg-blue-400" onclick="scaleItem(this, 0.05, event)">+</button><button type="button" class="ctrl-btn bg-slate-600 hover:bg-slate-500" onclick="scaleItem(this, -0.05, event)">-</button></div>
+                    <img src="${croppedUrl}">`;
+                collage.appendChild(div);
+                const percent = Math.round(((i + 1) / total) * 100);
+                document.getElementById('progressBar').style.width = `${percent}%`;
+                document.getElementById('progressText').innerText = `${percent}% (${i + 1}/${total})`;
+                await new Promise(r => setTimeout(r, 50)); 
+            }
+            refresh(); setTimeout(() => { load.style.display = 'none'; selectedSkins = []; }, 500);
+        }
+
+        document.getElementById('file').onchange = async (e) => {
+            const files = Array.from(e.target.files); if(!files.length) return;
+            for(let i = 0; i < files.length; i++) {
+                const div = document.createElement('div'); div.className = 'item'; div.style.setProperty('--ls', 1);
+                div.innerHTML = `<button class="del" onclick="this.parentElement.remove(); refresh();">✕</button>
+                    <div class="controls"><button type="button" class="ctrl-btn bg-blue-500" onclick="scaleItem(this, 0.05, event)">+</button><button type="button" class="ctrl-btn bg-slate-600" onclick="scaleItem(this, -0.05, event)">-</button></div>
+                    <img src="${URL.createObjectURL(files[i])}">`;
+                collage.appendChild(div);
+            }
+            refresh();
+        };
+
+        // 🚨 ทุบกำแพง + ขยายร่างเป็น HD ก่อนแคปรูป!!
+        async function save() {
+            if(!collage.children.length) return;
+            
+            load.style.display = 'flex';
+            document.getElementById('progressText').innerText = "Generating Ultra HD...";
+            document.getElementById('progressBar').style.width = '100%';
+            document.getElementById('loadingTip').innerHTML = "กำลังขยายร่างสกินทั้งหมดเป็น 4K...<br><span class='text-pink-400'>ชัดตาแตกและไม่แหว่ง 100% แน่นอน! ✨</span>";
+            
+            // ปิดโหมดปุ่ม และซ่อนปุ่ม
+            collage.classList.remove('show-controls');
+            document.querySelectorAll('.del, .controls').forEach(b => b.style.display = 'none');
+            
+            // 🚨 1. แอบปรับ "ย่อกระดาน" ให้กลับเป็น 100% (ไซส์จริง) ก่อนถ่ายรูป ภาพจะได้คมกริบ!
+            const origBoardZoom = document.getElementById('boardZoom').value;
+            document.getElementById('boardZoom').value = 100;
+            refresh(); // บังคับให้กระดานขยายร่าง
+            
+            // 🚨 2. ปลดล็อกข้อจำกัดหน้าจอทั้งหมดชั่วคราว
+            const body = document.body;
+            const container = document.querySelector('.container-main');
+            const stageWrapper = document.querySelector('.stage-wrapper');
+            
+            const origBodyOverflow = body.style.overflowX;
+            const origContainerMaxWidth = container.style.maxWidth;
+            const origStageOverflow = stageWrapper.style.overflow;
+            const origStageWidth = stageWrapper.style.width;
+            
+            body.style.overflowX = 'visible';
+            container.style.maxWidth = 'none';
+            stageWrapper.style.overflow = 'visible';
+            stageWrapper.style.width = 'max-content';
+            
+            await new Promise(r => setTimeout(r, 600)); 
+            
+            const cvs = await html2canvas(collage, { 
+                scale: 2, // ถ่ายเบิ้ล 2 เท่าเพื่อความชัดตาแตก
+                backgroundColor: null, 
+                useCORS: true,
+                width: collage.scrollWidth,
+                height: collage.scrollHeight
+            });
+            
+            const a = document.createElement('a');
+            a.download = `NONIOAEY-Final-HD.png`;
+            a.href = cvs.toDataURL();
+            a.click();
+            
+            // 🚨 3. ถ่ายเสร็จแล้ว ย่อกระดานกลับมาให้เล็กเหมือนเดิม
+            document.getElementById('boardZoom').value = origBoardZoom;
+            
+            // ประกอบหน้าเว็บกลับมาเหมือนเดิม
+            body.style.overflowX = origBodyOverflow;
+            container.style.maxWidth = origContainerMaxWidth;
+            stageWrapper.style.overflow = origStageOverflow;
+            stageWrapper.style.width = origStageWidth;
+            refresh(); // บังคับให้เว็บจัดเลย์เอาต์ใหม่
+            
+            document.querySelectorAll('.del, .controls').forEach(b => b.style.display = '');
+            load.style.display = 'none';
+        }
+
+        new Sortable(collage, { 
+            animation: 200, delay: 150, delayOnTouchOnly: true, ghostClass: 'opacity-30', swapThreshold: 0.8, forceFallback: true, filter: 'button', preventOnFilter: false, onEnd: refresh 
+        });
+        
+        refresh();
+    </script>
+</body>
+</html>
